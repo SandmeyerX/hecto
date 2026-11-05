@@ -1,6 +1,5 @@
 use crossterm::event::{Event, KeyCode, read};
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
-use std::io::{self, Read};
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -13,7 +12,7 @@ impl Editor {
 
     pub fn run(&self) {
         if let Err(err) = self.repl() {
-            panic!("err: {}", err);
+            panic!("err: {err}");
         }
         println!("byebye~");
     }
@@ -23,7 +22,7 @@ impl Editor {
         loop {
             match read()? {
                 Event::Key(key_event) => {
-                    println!("Key event: {:#?}", key_event);
+                    println!("Key event: {key_event:#?}");
                     match key_event.code {
                         KeyCode::Char(c) => {
                             if c == 'q' {
