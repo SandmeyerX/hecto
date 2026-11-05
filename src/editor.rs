@@ -1,3 +1,4 @@
+use crossterm::event::{Event, KeyCode, read};
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use std::io::{self, Read};
 
@@ -12,19 +13,21 @@ impl Editor {
 
     pub fn run(&self) -> Result<()> {
         enable_raw_mode()?;
-        for byte in io::stdin().bytes() {
-            let byte = byte?;
-            let c = byte as char;
-            if c == 'q' {
-                println!("quit");
-                disable_raw_mode()?;
-                break;
-            }
-
-            if c.is_control() {
-                println!("ASCII: {0:03}, binary: {0:08b}", byte);
-            } else {
-                println!("ASCII: {0:03}, binary: {0:08b}, char: {1:}", byte, c);
+        loop {
+            match read()? {
+                Event::Key(key_event) => {
+                    println!("Key event: {:#?}", key_event);
+                    match key_event.code {
+                        KeyCode::Char(c) => {
+                            if c == 'q' {
+                                break;
+                            }
+                            println!("ASCII: {0:03}, binary: {0:08b}, char: {1:}", c as u8, c);
+                        }
+                        _ => (),
+                    }
+                }
+                _ => (),
             }
         }
 
