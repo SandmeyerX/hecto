@@ -61,15 +61,12 @@ impl Editor {
     }
 
     fn eval_event(&mut self, event: &Event) {
-        if let Event::Key(key_event) = event {
-            match key_event.code {
-                KeyCode::Char(c) => {
-                    if c == 'q' && key_event.modifiers == KeyModifiers::CONTROL {
-                        self.should_quit = true;
-                    }
-                }
-                _ => (),
-            }
+        if let Event::Key(key_event) = event
+            && let KeyCode::Char(c) = key_event.code
+            && c == 'q'
+            && key_event.modifiers == KeyModifiers::CONTROL
+        {
+            self.should_quit = true;
         }
     }
 }
