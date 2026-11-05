@@ -11,7 +11,14 @@ impl Editor {
         Self {}
     }
 
-    pub fn run(&self) -> Result<()> {
+    pub fn run(&self) {
+        if let Err(err) = self.repl() {
+            panic!("err: {}", err);
+        }
+        println!("byebye~");
+    }
+
+    fn repl(&self) -> Result<()> {
         enable_raw_mode()?;
         loop {
             match read()? {
@@ -30,6 +37,7 @@ impl Editor {
                 _ => (),
             }
         }
+        disable_raw_mode()?;
 
         Ok(())
     }

@@ -3,5 +3,5 @@ mod editor;
 fn main() {
     let editor = editor::Editor::new();
 
-    editor.run().unwrap();
+    editor.run();
 }
