@@ -1,5 +1,5 @@
-use crossterm::event::{Event, KeyCode, KeyModifiers, read};
 use crate::terminal::Terminal;
+use crossterm::event::{Event, KeyCode, KeyModifiers, read};
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -35,12 +35,15 @@ impl Editor {
     }
 
     fn refresh_screen(&self) -> Result<()> {
+        Terminal::hide_cursor()?;
         Self::draw_rows()?;
 
         if self.should_quit {
             Terminal::clear_screen()?;
-            println!("byebye~");
+            Terminal::print("byebye~\n")?;
         }
+        Terminal::show_cursor()?;
+        Terminal::execute()?;
 
         Ok(())
     }
@@ -49,7 +52,8 @@ impl Editor {
         let (_col, row) = Terminal::size()?;
         for i in 0..row {
             Terminal::move_cursor_to(0, i)?;
-            print!("~");
+            Terminal::clear_line()?;
+            Terminal::print("~")?;
         }
         Terminal::move_cursor_to(0, 0)?;
 
