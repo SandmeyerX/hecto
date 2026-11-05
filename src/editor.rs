@@ -1,6 +1,8 @@
 use crate::terminal::Terminal;
 use crossterm::event::{Event, KeyCode, KeyModifiers, read};
 
+const NAME: &str = env!("CARGO_PKG_NAME");
+const VERSION: &str = env!("CARGO_PKG_VERSION");
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 pub struct Editor {
@@ -49,13 +51,44 @@ impl Editor {
     }
 
     fn draw_rows() -> Result<()> {
-        let (_col, row) = Terminal::size()?;
-        for i in 0..row {
-            Terminal::move_cursor_to(0, i)?;
+        let (col, row) = Terminal::size()?;
+        let info = format!("{NAME} v{VERSION}");
+        let (info_x, info_y) = Self::hello_info_position(col, row, &info);
+        
+        for y in 0..row {
+            Terminal::move_cursor_to(0, y)?;
             Terminal::clear_line()?;
-            Terminal::print("~")?;
+
+            if y == info_y {
+                Terminal::move_cursor_to(info_x, info_y)?;
+                Self::draw_hello_info(&info)?;
+                continue;
+            }
+
+            Self::draw_empty_row()?;
         }
         Terminal::move_cursor_to(0, 0)?;
+
+        Ok(())
+    }
+
+    fn draw_empty_row() -> Result<()> {
+        Terminal::print('~')?;
+
+        Ok(())
+    }
+
+    fn hello_info_position(w: u16, h: u16, info: &str) -> (u16, u16) {
+        let info_width = u16::try_from(info.len())
+            .expect("hello info too long"); // This length is in bytes
+        let x = w.saturating_sub(info_width) / 2; // 水平居中
+        let y = h * 2 / 3;                        // 垂直 2/3 处
+
+        (x, y)
+    }
+
+    fn draw_hello_info(info: &str) -> Result<()> {
+        Terminal::print(info)?;
 
         Ok(())
     }
