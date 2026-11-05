@@ -171,7 +171,7 @@ cargo clippy --fix -- -W clippy::all  -W clippy::pedantic
 我们可以告诉 `clippy` 我们希望默认使用哪些标志，例如通过将以下代码添加到 `main.rs` 的顶部：
 
 ```rust
-#![warnall, clippy::pedantic]
+#![warn(clippy::all, clippy::pedantic)]
 ```
 
 这个指令为 `all` 和 `pedantic` 两个类别激活警告。尽管名字叫 `all`，但它并不包括*所有东西*，而是包括 `correctness`、`suspicious`、`style`、`complexity` 和 `perf` 等类别。查看[文档](https://doc.rust-lang.org/nightly/clippy/)，似乎 `style` 正是我们需要的，但其他的也不会伤害我们。
