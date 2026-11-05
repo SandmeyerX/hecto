@@ -1,7 +1,5 @@
-use crossterm::cursor::MoveTo;
 use crossterm::event::{Event, KeyCode, KeyModifiers, read};
-use crossterm::execute;
-use crossterm::terminal::{Clear, ClearType, disable_raw_mode, enable_raw_mode, size};
+use crate::terminal::Terminal;
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -15,32 +13,11 @@ impl Editor {
     }
 
     pub fn run(&mut self) {
-        Self::init().expect("failed to init");
+        Terminal::init().expect("failed to init");
         let res = self.repl();
-        Self::terminate().expect("failed to terminate");
+        Terminal::terminate().expect("failed to terminate");
 
         res.expect("repl error");
-    }
-
-    fn init() -> Result<()> {
-        enable_raw_mode()?;
-        Self::clear_screen()?;
-
-        Ok(())
-    }
-
-    fn terminate() -> Result<()> {
-        disable_raw_mode()?;
-
-        Ok(())
-    }
-
-    fn clear_screen() -> Result<()> {
-        let mut stdout = std::io::stdout();
-        execute!(stdout, MoveTo(0, 0))?;
-        execute!(stdout, Clear(ClearType::All))?;
-
-        Ok(())
     }
 
     fn repl(&mut self) -> Result<()> {
@@ -59,9 +36,9 @@ impl Editor {
 
     fn refresh_screen(&self) -> Result<()> {
         Self::draw_rows()?;
-        
+
         if self.should_quit {
-            Self::clear_screen()?;
+            Terminal::clear_screen()?;
             println!("byebye~");
         }
 
@@ -69,13 +46,12 @@ impl Editor {
     }
 
     fn draw_rows() -> Result<()> {
-        let mut stdout = std::io::stdout();
-        let (_col, row) = size()?;
+        let (_col, row) = Terminal::size()?;
         for i in 0..row {
-            execute!(stdout, MoveTo(0, i))?;
+            Terminal::move_cursor_to(0, i)?;
             print!("~");
         }
-        execute!(stdout, MoveTo(0, 0))?;
+        Terminal::move_cursor_to(0, 0)?;
 
         Ok(())
     }
