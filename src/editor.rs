@@ -54,7 +54,7 @@ impl Editor {
         let (col, row) = Terminal::size()?;
         let info = format!("{NAME} v{VERSION}");
         let (info_x, info_y) = Self::hello_info_position(col, row, &info);
-        
+
         for y in 0..row {
             Terminal::move_cursor_to(0, y)?;
             Terminal::clear_line()?;
@@ -78,11 +78,17 @@ impl Editor {
         Ok(())
     }
 
+    #[allow(clippy::integer_division, reason = "对于终端的位置计算，我不在乎精度")]
     fn hello_info_position(w: u16, h: u16, info: &str) -> (u16, u16) {
-        let info_width = u16::try_from(info.len())
-            .expect("hello info too long"); // This length is in bytes
+        let info_width = u16::try_from(info.len()).expect("hello info too long"); // This length is in bytes
+
         let x = w.saturating_sub(info_width) / 2; // 水平居中
-        let y = h * 2 / 3;                        // 垂直 2/3 处
+
+        #[allow(
+            clippy::arithmetic_side_effects,
+            reason = "数学上这是绝对安全的，不会溢出"
+        )]
+        let y = h / 3 * 2; // 垂直 2/3 处
 
         (x, y)
     }
