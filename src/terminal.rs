@@ -6,6 +6,11 @@ use std::io::{Write, stdout};
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
+pub struct Size {
+    pub width: u16,
+    pub height: u16,
+}
+
 pub struct Terminal;
 
 impl Terminal {
@@ -73,9 +78,12 @@ impl Terminal {
         Ok(())
     }
 
-    pub fn size() -> Result<(u16, u16)> {
+    pub fn size() -> Result<Size> {
         let size = size()?;
 
-        Ok(size)
+        Ok(Size {
+            width: size.0,
+            height: size.1,
+        })
     }
 }
