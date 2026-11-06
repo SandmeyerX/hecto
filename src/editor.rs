@@ -38,12 +38,14 @@ impl Editor {
 
     fn refresh_screen(&self) -> Result<()> {
         Terminal::hide_cursor()?;
-        Self::draw_rows()?;
 
         if self.should_quit {
             Terminal::clear_screen()?;
             Terminal::print("byebye~\n")?;
+        } else {
+            Self::draw_rows()?;
         }
+
         Terminal::show_cursor()?;
         Terminal::execute()?;
 
