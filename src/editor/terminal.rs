@@ -1,10 +1,9 @@
+use crate::editor::Result;
 use crossterm::cursor::{Hide, MoveTo, Show};
 use crossterm::style::Print;
 use crossterm::terminal::{Clear, ClearType, disable_raw_mode, enable_raw_mode, size};
 use crossterm::{Command, queue};
 use std::io::{Write, stdout};
-
-type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 pub struct Size {
     pub width: u16,
