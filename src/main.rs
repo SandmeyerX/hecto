@@ -9,5 +9,12 @@
 mod editor;
 
 fn main() {
-    editor::Editor::default().run();
+    let args = std::env::args().collect::<Vec<_>>();
+    let mut editor = editor::Editor::default();
+
+    if let Some(path) = args.get(1) {
+        editor.load(path);
+    }
+
+    editor.run();
 }

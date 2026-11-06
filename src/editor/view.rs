@@ -1,3 +1,6 @@
+use std::fs;
+use std::path::Path;
+
 use crate::editor::Result;
 use crate::editor::buffer::Buffer;
 use crate::editor::terminal::{Size, Terminal};
@@ -11,6 +14,24 @@ pub struct View {
 }
 
 impl View {
+    pub fn load<P: AsRef<Path>>(&mut self, path: P) -> Result<()> {
+        let path = path.as_ref();
+        if !path.is_file() {
+            return Err(format!(
+                "failed to load file `{}`: it is not a file or does not exist",
+                path.display()
+            )
+            .into());
+        }
+
+        let content = fs::read_to_string(path)?;
+        for line in content.lines() {
+            self.buf.lines.push(line.to_string());
+        }
+
+        Ok(())
+    }
+
     pub fn render(&self) -> Result<()> {
         let size = Terminal::size()?;
         let (_col, row) = (size.width, size.height);
@@ -24,7 +45,7 @@ impl View {
             if let Some(line) = self.buf.lines.get(usize::from(y)) {
                 Terminal::print(line)?;
             }
-            if y == info_y {
+            if y == info_y && self.buf.is_empty() {
                 Terminal::move_cursor_to(info_x, info_y)?;
                 Self::draw_hello_info(&info)?;
             } else {

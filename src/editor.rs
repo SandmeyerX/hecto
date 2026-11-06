@@ -1,6 +1,8 @@
 mod buffer;
 mod terminal;
 mod view;
+use std::path::Path;
+
 use crate::editor::terminal::Terminal;
 use crate::editor::view::View;
 use crossterm::event::{Event, KeyCode, KeyModifiers, read};
@@ -37,6 +39,10 @@ impl Editor {
         Terminal::terminate().expect("failed to terminate");
 
         res.expect("repl error");
+    }
+
+    pub fn load<P: AsRef<Path>>(&mut self, path: P) {
+        self.view.load(path).unwrap();
     }
 
     fn repl(&mut self) -> Result<()> {
