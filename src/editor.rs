@@ -1,3 +1,4 @@
+mod buffer;
 mod terminal;
 mod view;
 use crate::editor::terminal::Terminal;
@@ -22,10 +23,11 @@ impl Location {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Default)]
 pub struct Editor {
     should_quit: bool,
     location: Location,
+    view: View,
 }
 
 impl Editor {
@@ -58,7 +60,7 @@ impl Editor {
             Terminal::clear_screen()?;
             Terminal::print("byebye~\n")?;
         } else {
-            View::render()?;
+            self.view.render()?;
         }
 
         Terminal::move_cursor_to(self.location.x, self.location.y)?;

@@ -1,13 +1,17 @@
 use crate::editor::Result;
+use crate::editor::buffer::Buffer;
 use crate::editor::terminal::{Size, Terminal};
 
 const NAME: &str = env!("CARGO_PKG_NAME");
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-pub struct View;
+#[derive(Default)]
+pub struct View {
+    buf: Buffer,
+}
 
 impl View {
-    pub fn render() -> Result<()> {
+    pub fn render(&self) -> Result<()> {
         let size = Terminal::size()?;
         let (_col, row) = (size.width, size.height);
         let info = format!("{NAME} v{VERSION}");
@@ -17,13 +21,15 @@ impl View {
             Terminal::move_cursor_to(0, y)?;
             Terminal::clear_line()?;
 
+            if let Some(line) = self.buf.lines.get(usize::from(y)) {
+                Terminal::print(line)?;
+            }
             if y == info_y {
                 Terminal::move_cursor_to(info_x, info_y)?;
                 Self::draw_hello_info(&info)?;
-                continue;
+            } else {
+                Self::draw_empty_row()?;
             }
-
-            Self::draw_empty_row()?;
         }
         Terminal::move_cursor_to(0, 0)?;
 
