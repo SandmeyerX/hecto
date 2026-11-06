@@ -185,8 +185,8 @@ fn main() {
 ```rust
 fn main() {
     let mut vec: Vec<String> = Vec::new();
-    vec.pushfrom("Hello, World!");
-    vec.pushfrom("Hello, hecto!");
+    vec.push(String::from("Hello, World!"));
+    vec.push(String::from("Hello, hecto!"));
     println!("{}",vec[0]); //变体 1
     if let Some(element) = vec.get(1) {
         println!("{}", element); //变体 2
