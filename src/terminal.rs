@@ -57,7 +57,7 @@ impl Terminal {
 
     pub fn execute() -> Result<()> {
         stdout().flush()?;
-        
+
         Ok(())
     }
 
@@ -69,7 +69,7 @@ impl Terminal {
 
     pub fn print<T: std::fmt::Display>(content: T) -> Result<()> {
         Self::queue(Print(content))?;
-        
+
         Ok(())
     }
 
