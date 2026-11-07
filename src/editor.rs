@@ -1,7 +1,6 @@
 mod buffer;
 mod terminal;
 mod view;
-use std::path::Path;
 
 use crate::editor::terminal::Terminal;
 use crate::editor::view::View;
@@ -34,6 +33,7 @@ pub struct Editor {
 
 impl Editor {
     pub fn run(&mut self) {
+        self.handle_args().expect("handle args err");
         Terminal::init().expect("failed to init");
         let res = self.repl();
         Terminal::terminate().expect("failed to terminate");
@@ -41,8 +41,13 @@ impl Editor {
         res.expect("repl error");
     }
 
-    pub fn load<P: AsRef<Path>>(&mut self, path: P) {
-        self.view.load(path).unwrap();
+    pub fn handle_args(&mut self) -> Result<()> {
+        let args = std::env::args().collect::<Vec<_>>();
+        if let Some(path) = args.get(1) {
+            self.view.load(path)?;
+        }
+
+        Ok(())
     }
 
     fn repl(&mut self) -> Result<()> {
@@ -61,15 +66,16 @@ impl Editor {
 
     fn refresh_screen(&self) -> Result<()> {
         Terminal::hide_cursor()?;
+        Terminal::move_cursor_to(0, 0)?;
 
         if self.should_quit {
             Terminal::clear_screen()?;
             Terminal::print("byebye~\n")?;
         } else {
             self.view.render()?;
+            Terminal::move_cursor_to(self.location.x, self.location.y)?;
         }
 
-        Terminal::move_cursor_to(self.location.x, self.location.y)?;
         Terminal::show_cursor()?;
         Terminal::execute()?;
 
