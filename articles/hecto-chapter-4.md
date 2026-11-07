@@ -314,12 +314,13 @@ pub fn main() {
     }
 
     let second_range = 1..10;
-     println!("Second range");
-      println!("{:?}", second_range);
+    println!("Second range");
+    println!("{:?}", second_range);
     for n in second_range.take(3) {
         println!("{:?}", n);
     }
-     let third_range = 1..10;
+
+    let third_range = 1..10;
     println!("Third range");
     println!("{:?}", third_range);
     for n in third_range.skip(2) {
@@ -330,13 +331,13 @@ pub fn main() {
     let vec: Vec<u8> = fourth_range.skip(2).take(3).collect();
     println!("Vector");
     println!("{:?}", vec);
-     for n in vec {
+    for n in vec {
         println!("{:?}", n);
     }
 }
 ```
 
-[Rust Playground 链接](https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=1eb6d8b6d6d6e297648434aec58e96c4)
+[Rust Playground 链接](https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=bb0c6c9270e1d1b085d4608725b47b86)
 
 ## 任务 8：更好的渲染
 
