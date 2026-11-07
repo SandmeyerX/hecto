@@ -37,17 +37,17 @@ Rust 用两种类型表示这类文本：`str` 和 `String`。`str` 是字符串
 - 指向内存中字节序列起始位置的指针
 - 该字节序列的长度（以字节为单位）
 - 任何 `str` 值都保证是有效的 UTF-8
-- 字节序列遵循 UTF-8 编码规则  
+- 字节序列遵循 UTF-8 编码规则
 	仅此而已。我们在[第 2 章](hecto-chapter-2.md)中已经了解了字节和字节序列，也认识了指针，并把它比作一张标明宝藏位置的地图。
 
 让我们在以下 Rust Playground 中探索这一点：
 
 ```rust
 fn main() {
-    let slice: &str = "Hello, World";  
-    dbg!(slice.as_ptr());              
-    dbg!(slice.len());                 
-    dbg!(slice.as_bytes());            
+    let slice: &str = "Hello, World";
+    dbg!(slice.as_ptr());
+    dbg!(slice.len());
+    dbg!(slice.as_bytes());
 }
 ```
 
@@ -69,7 +69,7 @@ UTF-8 有一个很重要的特性：它与 ASCII 完全兼容。ASCII 表中的�
 
 这时就需要 `String` 了。`String` 是一个真正的 `struct`，并为自身提供了相应的方法。它在底层使用一种可动态增长的数据结构（我们稍后就会介绍）来保存内容，因此修改 `String` 十分方便。换句话说，处理 `str` 时那些繁琐的工作都由 `String` 替我们完成了。
 
-更方便的是，`String` 实现了一个特定的 trait（准确地说是 `Deref<Target = str>`）。借助这个 trait，我们只需通过解引用（通常表现为在变量前加上 `&`），就能把 `String` 当作 `&str` 使用。因此，编写函数时不必纠结参数应该接受 `&str` 还是 `&String`，也不必手动处理两者之间的转换。  
+更方便的是，`String` 实现了一个特定的 trait（准确地说是 `Deref<Target = str>`）。借助这个 trait，我们只需通过解引用（通常表现为在变量前加上 `&`），就能把 `String` 当作 `&str` 使用。因此，编写函数时不必纠结参数应该接受 `&str` 还是 `&String`，也不必手动处理两者之间的转换。
 这意味着我们通常可以统一使用 `&str`，只有在确实需要取得字符串所有权时，才让函数接收 `String`。
 
 让我们看看实际效果。
@@ -82,7 +82,7 @@ fn prints_str(str: &str) {
 fn main() {
     let slice: &str = "Hello!";
     prints_str(slice);
-    
+
     let mut string: String = String::from("Hello!");
     string.pop();
     string.push_str(", World!");
@@ -139,7 +139,7 @@ fn main() {
 
 这时就需要指针了。指针可以看作一张地图，告诉我们数据从哪里开始，以及如何定位它，从而高效地访问数据。以 `aa` 为例，只要知道起始地址和每个字符占用的空间，就能定位其中的两个 `a`。
 
-继续添加字符（例如变成 `aaa`）就没那么简单了。如果最后一个 `a` 后面的内存已经被占用，就必须寻找更大的连续空间：向操作系统申请新的内存，把原有字符复制过去，再添加新字符。这个过程比直接使用紧邻的空闲空间要慢得多。  
+继续添加字符（例如变成 `aaa`）就没那么简单了。如果最后一个 `a` 后面的内存已经被占用，就必须寻找更大的连续空间：向操作系统申请新的内存，把原有字符复制过去，再添加新字符。这个过程比直接使用紧邻的空闲空间要慢得多。
 Rust 通过编译器机制帮助我们处理常见的内存管理问题：
 
 - 防止程序访问已分配内存范围之外的位置。
@@ -194,7 +194,7 @@ fn main() {
 }
 ```
 
-[Rust Playground 链接](https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=77c0be69c32fcf16685accf57e6ce5ce)  
+[Rust Playground 链接](https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=77c0be69c32fcf16685accf57e6ce5ce)
 关于第二种写法以及其中的 `Some`，我们会在完成本任务后再详细讨论。
 
 现在是任务：
@@ -228,10 +228,10 @@ fn main() {
             Some(numerator / denominator)
         }
     }
-    
+
     // 函数的返回值是一个 option
     let result = divide(2.0, 3.0);
-    
+
     // 模式匹配来检索值
     match result {
         // 除法是有效的
@@ -265,8 +265,8 @@ fn main() {
 
 `collect()` 会把 `args()` 产生的值收集到我们需要的 `Vec` 中。完成本任务后，我们再详细讨论 `collect()` 的工作方式。
 
-读取文件系统中的文本文件，可以使用 `std::fs::read_to_string`。顾名思义，这个函数会[打开文件并将内容读取为字符串](https://doc.rust-lang.org/std/fs/fn.read_to_string.html)。  
-`let file_contents = std::fs::read_to_string(filename)?;` 会读取 `filename` 指定的文件。  
+读取文件系统中的文本文件，可以使用 `std::fs::read_to_string`。顾名思义，这个函数会[打开文件并将内容读取为字符串](https://doc.rust-lang.org/std/fs/fn.read_to_string.html)。
+`let file_contents = std::fs::read_to_string(filename)?;` 会读取 `filename` 指定的文件。
 如果读取成功，`file_contents` 就会包含文件内容，并且保证是有效的 UTF-8 字符串。可以使用下面的代码遍历这个 `String`（实际上，任何 `String` 都可以）中的每一行：
 
 ```rust
@@ -306,7 +306,7 @@ for line in file_contents.lines() {
 ```rust
 pub fn main() {
     let range = 1..10;
-    
+
     println!("First range");
     println!("{:?}", range);
     for n in range {
@@ -325,7 +325,7 @@ pub fn main() {
     for n in third_range.skip(2) {
         println!("{:?}", n);
     }
-    
+
     let fourth_range = 1..10;
     let vec: Vec<u8> = fourth_range.skip(2).take(3).collect();
     println!("Vector");
@@ -340,8 +340,8 @@ pub fn main() {
 
 ## 任务 8：更好的渲染
 
-现在我们已经可以显示文档中的各行，但宽度超过终端的行仍然可能自动换行。  
-目前，我们通过输出 `\r\n` 将光标移动到下一行，再继续渲染。更合适的做法是直接把光标移动到下一行的行首。  
+现在我们已经可以显示文档中的各行，但宽度超过终端的行仍然可能自动换行。
+目前，我们通过输出 `\r\n` 将光标移动到下一行，再继续渲染。更合适的做法是直接把光标移动到下一行的行首。
 此外，每次进入 `repl` 循环，我们都会重新渲染整个视图。实际上，视图内容并没有变化，变化的只有光标位置，因此没有必要每次都重绘。
 
 我们将在本任务中修复所有这些问题：
@@ -385,7 +385,7 @@ fn main() {
 
 ### 使用 panic! 处理不可恢复的错误
 
-Rust 使用 `panic!` 处理程序无法继续执行的情况。默认情况下，Rust 会开始*栈展开*（stack unwinding）：沿着调用栈逐层返回，并在返回过程中执行清理操作。清理过程的一部分是输出调用栈信息，也就是我们看到的*栈回溯*（stack trace），并销毁相关变量和结构体。  
+Rust 使用 `panic!` 处理程序无法继续执行的情况。默认情况下，Rust 会开始*栈展开*（stack unwinding）：沿着调用栈逐层返回，并在返回过程中执行清理操作。清理过程的一部分是输出调用栈信息，也就是我们看到的*栈回溯*（stack trace），并销毁相关变量和结构体。
 你也可以配置 Rust 在发生 panic 时立即中止程序，而不执行栈展开。这样可以减小程序体积，因为它省去了展开过程。可以在 `Cargo.toml` 中设置 `panic = 'abort'`。这种方式执行得更快，但需要注意：程序可能来不及清理已经打开的文件、网络连接等资源。
 
 ### 自定义 panic 的处理方式
@@ -438,20 +438,20 @@ fn main() {
     assert!(expensive_check(), "Expensive check failed in Release Build!");
     assert_eq!(expensive_check(), true);
     assert_ne!(expensive_check(), false);
-    
+
     #[cfg(debug_assertions)]
     {
         println!("Debug Checks:");
     }
-    
+
     debug_assert!(expensive_check());
     debug_assert!(expensive_check(), "Expensive check failed in Debug Build!");
     debug_assert_eq!(expensive_check(), true);
     debug_assert_ne!(expensive_check(), false);
-    
+
     println!("Checks from conditional functions:");
     assert!(other_expensive_check());
-    
+
     println!("All checks passed");
 }
 ```
@@ -576,8 +576,8 @@ fn main() {
 ```rust
 fn main() {
     let message = String::from("Hello");
-    let greet = move |name| println!("{}, {}!", message, name); 
-    greet("Philipp"); // 这是我的名字，以防你忘了 
+    let greet = move |name| println!("{}, {}!", message, name);
+    greet("Philipp"); // 这是我的名字，以防你忘了
 }
 ```
 
@@ -601,9 +601,9 @@ fn main() {
 
 ```rust
 //检索当前 hook，默认情况下它会打印一些漂亮的 panic 信息
-let current_hook = std::panic::take_hook(); 
+let current_hook = std::panic::take_hook();
 // 定义一个接受 PanicInfo 引用的新闭包。
-// 在这里移动闭包内需要的任何外部变量。 
+// 在这里移动闭包内需要的任何外部变量。
 // 将闭包放入 Box 并将其设置为新的 panic hook。
 std::panic::set_hook(Box::new(move |panic_info| {
     // 我们的自定义 panic hook 逻辑放在这里
@@ -643,14 +643,14 @@ std::panic::set_hook(Box::new(move |panic_info| {
 - `From` 和 `TryFrom` trait
 - `Range` 参数
 
-先看命令分发结构。作者没有继续直接响应 `crossterm` 的事件，而是引入了一套内部命令系统：`Editor` 根据收到的 `crossterm` 事件分发相应命令。这样做有两个好处：  
-第一，随着代码规模增长，程序会更容易理解和维护。后续还会加入插入、删除等各种文本操作命令，采用统一的命令结构后，扩展和调整这些功能会更清晰。  
+先看命令分发结构。作者没有继续直接响应 `crossterm` 的事件，而是引入了一套内部命令系统：`Editor` 根据收到的 `crossterm` 事件分发相应命令。这样做有两个好处：
+第一，随着代码规模增长，程序会更容易理解和维护。后续还会加入插入、删除等各种文本操作命令，采用统一的命令结构后，扩展和调整这些功能会更清晰。
 第二，这为后续功能预留了空间。最直接的例子就是撤销/重做：可以用一个命令栈来实现，每执行一个新命令（例如 `Insert(Char)`），就把对应的逆向命令（例如 `Delete`）压入栈中。撤销操作只需弹出栈顶的命令并执行即可。
 
 ### From 和 TryFrom
 
-作者在代码中实现了两个 trait：[From](https://doc.rust-lang.org/std/convert/trait.From.html) 和 [TryFrom](https://doc.rust-lang.org/std/convert/trait.TryFrom.html)。两者最主要的区别在于：`TryFrom` 允许类型转换失败。它们还有两个值得注意的特点：  
-第一，实现 `from()` 后，相应的 `into()` 方法也可以直接使用。也就是说，如果实现了从类型 `A` 到类型 `B` 的转换，就既可以调用 `B::from(a)`，也可以调用 `a.into()`，把 `a` 转换为 `B` 的实例。  
+作者在代码中实现了两个 trait：[From](https://doc.rust-lang.org/std/convert/trait.From.html) 和 [TryFrom](https://doc.rust-lang.org/std/convert/trait.TryFrom.html)。两者最主要的区别在于：`TryFrom` 允许类型转换失败。它们还有两个值得注意的特点：
+第一，实现 `from()` 后，相应的 `into()` 方法也可以直接使用。也就是说，如果实现了从类型 `A` 到类型 `B` 的转换，就既可以调用 `B::from(a)`，也可以调用 `a.into()`，把 `a` 转换为 `B` 的实例。
 第二，Rust 可以利用这些 trait 自动完成某些隐式转换。下面的 Rust Playground 示例能更直观地说明这一点：
 
 ```rust
@@ -683,7 +683,7 @@ fn main() {
 
 ### 范围
 
-再来看一下范围类型。代码中使用了 `Range<usize>` 作为参数类型，因此可以接收 `0..10` 这样的范围表达式。  
+再来看一下范围类型。代码中使用了 `Range<usize>` 作为参数类型，因此可以接收 `0..10` 这样的范围表达式。
 Rust 提供了以下几种范围类型：
 
 - `Range`（`start..end`）：从 `start` 开始，到 `end` 之前结束。
@@ -695,7 +695,7 @@ Rust 提供了以下几种范围类型：
 
 ## 任务 11：将光标吸附到行尾
 
-现在，代码已经能够明确区分光标在屏幕上的位置，以及插入位置在文档中的位置。  
+现在，代码已经能够明确区分光标在屏幕上的位置，以及插入位置在文档中的位置。
 接下来要确保 `location` 始终指向文本中的有效位置。不过有两个例外：允许插入位置位于行尾最后一个字符之后，也允许它位于文档末尾的下一行。这样用户就能方便地继续输入新字符。
 
 开始之前先说明一点：本任务只适用于 ASCII 文本。如果你在处理非 ASCII 文本时遇到问题，先不用担心，我们会在下一项任务中解决。
@@ -768,7 +768,7 @@ fn main() {
 
 [Rust Playground 链接，它也遭受了我们在这里调查的问题](https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=2f0222abfa41a9fc8ec9ba120bc6d95e)
 
-按照刚才的假设，我们会认为这个字符串最多占用 22 个字节：ASCII 文本占 18 个字节，emoji 最多占 4 个字节，因为我们把一个 emoji 当作一个字符，而 Rust 的 `char` 占 4 个字节。  
+按照刚才的假设，我们会认为这个字符串最多占用 22 个字节：ASCII 文本占 18 个字节，emoji 最多占 4 个字节，因为我们把一个 emoji 当作一个字符，而 Rust 的 `char` 占 4 个字节。
 但实际结果是 44 个字节！其中仅 emoji 就占了 26 个字节。
 
 那么 emoji 中存储了什么？
@@ -781,7 +781,7 @@ fn main() {
     let skin_type = "🏿";
     let hand_shake = "🤝";
     let zero_width_joiner = "\u{200d}";
-    
+
     println!("Output: {skin_type}  Len: {} - Skin Type",  skin_type.len());
     println!("Output: {hand_shake} Len: {} - Hand Shake",  hand_shake.len());
     println!("Output: {zero_width_joiner}   Len: {} - Zero Width Joiner", zero_width_joiner.len());
@@ -852,7 +852,7 @@ fn main() {
 
 ## 任务 12：代码审查
 
-我的实现采用了一种非常直接、但效率不高的方法。这个问题真正棘手的地方，在于如何合理组合迭代器方法，以高效地得到所需结果。  
+我的实现采用了一种非常直接、但效率不高的方法。这个问题真正棘手的地方，在于如何合理组合迭代器方法，以高效地得到所需结果。
 先透露一点：下一步我会进一步优化这部分实现。
 
 把 `unicode-segmentation` 添加到项目时，你可能注意到了关于 `#![no_std]` 的说明。[crate 文档](https://docs.rs/unicode-segmentation/latest/unicode_segmentation/index.html)提到，它可以在启用了这个属性的 crate 中使用。这意味着什么？
@@ -865,7 +865,7 @@ fn main() {
 
 ## 字素簇的显示宽度
 
-说到 emoji：目前它们仍然无法被完全正确地处理。即使前面做了改进，只要一行中包含 emoji，滚动仍可能出错，你可能无法滚动到行尾。  
+说到 emoji：目前它们仍然无法被完全正确地处理。即使前面做了改进，只要一行中包含 emoji，滚动仍可能出错，你可能无法滚动到行尾。
 其他一些字素簇也有同样的问题。现在，`hecto` 已经把行的“长度”按屏幕上可见的字素簇数量计算，但我们还没有考虑到不同字素簇可能占据不同的显示宽度。
 
 Unicode 字符的显示宽度大致可以分为以下几类：
@@ -892,12 +892,12 @@ fn main() {
     println!("Half\t{half}\t{}\t{}", half.width(), half.width_cjk());
     println!("Full\t{full}\t{}\t{}", full.width(), full.width_cjk());
     println!("N(1)\t{neutral_1}\t{}\t{}", neutral_1.width(), neutral_1.width_cjk());
-    println!("N(2)\t{neutral_2}\t{}\t{}", neutral_2.width(), neutral_2.width_cjk()); 
-    println!("A \t{ambiguous}\t{}\t{}", ambiguous.width(), ambiguous.width_cjk()); 
+    println!("N(2)\t{neutral_2}\t{}\t{}", neutral_2.width(), neutral_2.width_cjk());
+    println!("A \t{ambiguous}\t{}\t{}", ambiguous.width(), ambiguous.width_cjk());
 }
 ```
 
-[Rust Playground 链接](https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=8bc95a5948e062344c4030886c6424f3)  
+[Rust Playground 链接](https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=8bc95a5948e062344c4030886c6424f3)
 `cjk` 是 Chinese、Japanese、Korean 的缩写，分别指中文、日文和韩文。这些文字中可能包含显示宽度不确定的字符。
 
 emoji 仍然是个麻烦。好消息是，普通 emoji 通常可以按全角字符处理；坏消息是，复合 emoji 的显示情况并不确定。这是因为 emoji 的渲染结果取决于字体：如果字体支持某个复合 emoji，就会把它显示成一个宽字符；如果不支持，就会分别显示组成它的各个部分。Rust Playground 很适合观察这一点：它的输入框和输出区域使用了不同字体，输入框不支持复合 emoji，而输出区域支持。
@@ -950,12 +950,12 @@ struct TextFragment {
 - 将 `unicode-width` 添加到你的项目中。
 - 如上所述重构你的代码。
 - [用这个文件测试你的更改。](https://raw.githubusercontent.com/pflenker/hecto-tutorial/7a8f2a734518ad016e5ed7ea5e804a3a5d718ce8/test-graphemes-2.txt)
-- 确保结构体、字段、函数和变量的命名都能准确反映这些调整。  
+- 确保结构体、字段、函数和变量的命名都能准确反映这些调整。
 	**代码审查：** [这是我如何做的。](https://github.com/pflenker/hecto-tutorial/commit/975c1dc8dfacff8ef2791d8ff0b47f0f6e8a42d8)
 
 ## 任务 14：一个文本查看器
 
-最后，我们再做一些收尾工作，改进对不可见字符的处理。目前，我们只把其中一部分字符替换为中点，而且对某些零宽度字符的处理也不够理想：例如，一个由 10 个零宽度连接符组成的字符串，会被 `unicode-segmentation` 识别为*一个*字素簇，因此最终只会被替换成*一个*中点。  
+最后，我们再做一些收尾工作，改进对不可见字符的处理。目前，我们只把其中一部分字符替换为中点，而且对某些零宽度字符的处理也不够理想：例如，一个由 10 个零宽度连接符组成的字符串，会被 `unicode-segmentation` 识别为*一个*字素簇，因此最终只会被替换成*一个*中点。
 不过，`hecto` 的定位是文本编辑器，主要用于显示和编辑可见文本。如果有人需要编辑不可见文本，`hecto` 并不适合这种用途。
 
 即便如此，把不可见字符直接输出到终端，也可能引发意想不到的问题。例如，制表符（`\t`）可能会在终端中展开成数量不固定的空格，从而造成显示错位。如果不替换转义字符（正如前面介绍的，它在 ASCII 和 Unicode 中都是合法字符），它就可能被直接发送到终端，并被解释为转义序列，改变终端的行为。顺带一提，这也是为什么把二进制文件误当作文本输出到终端时，终端界面往往会变得一团糟。
