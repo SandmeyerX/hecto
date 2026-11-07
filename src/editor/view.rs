@@ -45,7 +45,7 @@ impl View {
         for current_row in 0..height {
             Terminal::clear_line()?;
 
-            if let Some(line) = self.buf.lines.get(usize::from(current_row)) {
+            if let Some(line) = self.buf.lines.get(current_row) {
                 Terminal::print(line)?;
             } else {
                 Self::draw_empty_row()?;
@@ -67,13 +67,10 @@ impl View {
     /// 计算欢迎信息距离终端上下左右的边距
     ///
     /// 这里假设 `msg` 是单行并且是 ASCII 字符，水平居中，竖直上位于终端的第 2 / 3 行
-    ///
-    /// # Panic
-    /// 如果 `msg` 字节长度超出 [`u16::MAX`]，则 panic
     #[allow(clippy::integer_division, reason = "对于终端的位置计算，我不在乎精度")]
     fn cal_welcome_msg_padding(size: &Size, msg: &str) -> Padding {
         let Size { width, height } = size;
-        let msg_width = u16::try_from(msg.len()).expect("hello info too long"); // This length is in bytes
+        let msg_width = msg.len(); // This length is in bytes
 
         let left = width.saturating_sub(msg_width) / 2;
         let right = width.saturating_sub(left.saturating_add(msg_width));
@@ -81,11 +78,7 @@ impl View {
         let top = height.saturating_sub(bottom.saturating_add(1)); // 假设 msg 只有一行
         let row = top.saturating_add(1);
 
-        Padding {
-            left: usize::from(left),
-            right: usize::from(right),
-            row: usize::from(row),
-        }
+        Padding { left, right, row }
     }
 
     fn render_welcome_screen() -> Result<()> {
@@ -99,7 +92,7 @@ impl View {
 
         for current_row in 0..size.height {
             Terminal::clear_line()?;
-            if usize::from(current_row) == padding.row {
+            if current_row == padding.row {
                 Terminal::print(&row)?;
             } else {
                 Self::draw_empty_row()?;

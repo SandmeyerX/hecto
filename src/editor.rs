@@ -2,7 +2,7 @@ mod buffer;
 mod terminal;
 mod view;
 
-use crate::editor::terminal::Terminal;
+use crate::editor::terminal::{Position, Terminal};
 use crate::editor::view::View;
 use crossterm::event::{Event, KeyCode, KeyModifiers, read};
 
@@ -10,17 +10,26 @@ type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 #[derive(Debug, Default, Clone, Copy)]
 struct Location {
-    x: u16,
-    y: u16,
+    x: usize,
+    y: usize,
 }
 
 impl Location {
-    fn new(x: u16, y: u16) -> Self {
+    fn new(x: usize, y: usize) -> Self {
         Self { x, y }
     }
 
-    fn to_tuple(self) -> (u16, u16) {
+    fn to_tuple(self) -> (usize, usize) {
         (self.x, self.y)
+    }
+}
+
+impl From<Location> for Position {
+    fn from(value: Location) -> Self {
+        Self {
+            col: value.x,
+            row: value.y,
+        }
     }
 }
 
@@ -65,18 +74,18 @@ impl Editor {
     }
 
     fn refresh_screen(&self) -> Result<()> {
-        Terminal::hide_cursor()?;
-        Terminal::move_cursor_to(0, 0)?;
+        Terminal::hide_caret()?;
+        Terminal::move_caret_to(Position::default())?;
 
         if self.should_quit {
             Terminal::clear_screen()?;
             Terminal::print("byebye~\n")?;
         } else {
             self.view.render()?;
-            Terminal::move_cursor_to(self.location.x, self.location.y)?;
+            Terminal::move_caret_to(self.location.into())?;
         }
 
-        Terminal::show_cursor()?;
+        Terminal::show_caret()?;
         Terminal::execute()?;
 
         Ok(())

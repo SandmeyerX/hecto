@@ -5,9 +5,15 @@ use crossterm::terminal::{Clear, ClearType, disable_raw_mode, enable_raw_mode, s
 use crossterm::{Command, queue};
 use std::io::{Write, stdout};
 
+#[derive(Debug, Default, Clone, Copy)]
+pub struct Position {
+    pub col: usize,
+    pub row: usize,
+}
+
 pub struct Size {
-    pub width: u16,
-    pub height: u16,
+    pub width: usize,
+    pub height: usize,
 }
 
 pub struct Terminal;
@@ -29,7 +35,7 @@ impl Terminal {
     }
 
     pub fn clear_screen() -> Result<()> {
-        Self::move_cursor_to(0, 0)?;
+        Self::move_caret_to(Position::default())?;
         Self::queue(Clear(ClearType::All))?;
 
         Ok(())
@@ -41,19 +47,26 @@ impl Terminal {
         Ok(())
     }
 
-    pub fn move_cursor_to(x: u16, y: u16) -> Result<()> {
-        Self::queue(MoveTo(x, y))?;
+    /// 移动 caret 到指定位置
+    ///
+    /// # NOTE
+    /// 即使 [`Position`] 的行列字段值超过 [`u16::MAX`]，最大也只能取到该值
+    pub fn move_caret_to(pos: Position) -> Result<()> {
+        let col = pos.col.try_into().unwrap_or(u16::MAX);
+        let row = pos.row.try_into().unwrap_or(u16::MAX);
+
+        Self::queue(MoveTo(col, row))?;
 
         Ok(())
     }
 
-    pub fn hide_cursor() -> Result<()> {
+    pub fn hide_caret() -> Result<()> {
         Self::queue(Hide)?;
 
         Ok(())
     }
 
-    pub fn show_cursor() -> Result<()> {
+    pub fn show_caret() -> Result<()> {
         Self::queue(Show)?;
 
         Ok(())
@@ -81,8 +94,8 @@ impl Terminal {
         let size = size()?;
 
         Ok(Size {
-            width: size.0,
-            height: size.1,
+            width: usize::from(size.0),
+            height: usize::from(size.1),
         })
     }
 }
