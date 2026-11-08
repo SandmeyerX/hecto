@@ -11,9 +11,19 @@ pub struct Position {
     pub row: usize,
 }
 
+#[derive(Debug, Default)]
 pub struct Size {
     pub width: usize,
     pub height: usize,
+}
+
+impl From<(u16, u16)> for Size {
+    fn from(value: (u16, u16)) -> Self {
+        Self {
+            width: usize::from(value.0),
+            height: usize::from(value.1),
+        }
+    }
 }
 
 pub struct Terminal;

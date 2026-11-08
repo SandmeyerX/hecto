@@ -44,6 +44,8 @@ impl Editor {
     pub fn run(&mut self) {
         self.handle_args().expect("handle args err");
         Terminal::init().expect("failed to init");
+        self.view
+            .resize(Terminal::size().expect("failed to get terminal size"));
         let res = self.repl();
         Terminal::terminate().expect("failed to terminate");
 
@@ -73,7 +75,7 @@ impl Editor {
         Ok(())
     }
 
-    fn refresh_screen(&self) -> Result<()> {
+    fn refresh_screen(&mut self) -> Result<()> {
         Terminal::hide_caret()?;
         Terminal::move_caret_to(Position::default())?;
 
@@ -92,10 +94,8 @@ impl Editor {
     }
 
     fn eval_event(&mut self, event: &Event) -> Result<()> {
-        if let Event::Key(key_event) = event
-            && key_event.is_press()
-        {
-            match key_event.code {
+        match event {
+            Event::Key(key_event) if key_event.is_press() => match key_event.code {
                 KeyCode::Char(c) if c == 'q' && key_event.modifiers == KeyModifiers::CONTROL => {
                     self.should_quit = true;
                 }
@@ -108,7 +108,11 @@ impl Editor {
                 | KeyCode::PageUp
                 | KeyCode::PageDown => self.move_point(key_event.code)?,
                 _ => (),
+            },
+            Event::Resize(width, height) => {
+                self.view.resize((*width, *height).into());
             }
+            _ => (),
         }
 
         Ok(())

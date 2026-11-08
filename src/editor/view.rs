@@ -2,7 +2,7 @@ use std::path::Path;
 
 use crate::editor::Result;
 use crate::editor::buffer::Buffer;
-use crate::editor::terminal::{Size, Terminal};
+use crate::editor::terminal::{Position, Size, Terminal};
 
 // TODO: 也许可以使用 `const_format` crate，这样就能拼接这两个常量了
 // const NAME: &str = env!("CARGO_PKG_NAME");
@@ -16,50 +16,76 @@ struct Padding {
     row: usize,
 }
 
-#[derive(Default)]
 pub struct View {
     buf: Buffer,
+    need_redraw: bool,
+    size: Size,
+}
+
+impl Default for View {
+    fn default() -> Self {
+        Self {
+            need_redraw: true,
+            buf: Buffer::default(),
+            size: Size::default(),
+        }
+    }
 }
 
 impl View {
     pub fn load<P: AsRef<Path>>(&mut self, path: P) -> Result<()> {
         let buf = Buffer::load(path)?;
         self.buf = buf;
+        self.need_redraw = true;
 
         Ok(())
     }
 
-    pub fn render(&self) -> Result<()> {
-        if self.buf.is_empty() {
-            Self::render_welcome_screen()?;
-        } else {
-            self.render_buf()?;
+    pub fn render(&mut self) -> Result<()> {
+        if !self.need_redraw {
+            return Ok(());
+        }
+        if self.size.width == 0 || self.size.height == 0 {
+            return Ok(());
         }
 
-        Ok(())
-    }
-
-    fn render_buf(&self) -> Result<()> {
-        let Size { height, .. } = Terminal::size()?;
-
-        for current_row in 0..height {
-            Terminal::clear_line()?;
-
-            if let Some(line) = self.buf.lines.get(current_row) {
-                Terminal::print(line)?;
+        for current_line in 0..self.size.height {
+            if self.buf.is_empty() {
+                let padding = Self::cal_welcome_msg_padding(&self.size, WELCOME_MSG);
+                if current_line == padding.row {
+                    let welcome = Self::build_welcome_msg(&padding);
+                    Self::render_line(current_line, welcome)?;
+                } else {
+                    Self::draw_empty_line(current_line)?;
+                }
+            } else if let Some(line) = self.buf.lines.get(current_line) {
+                let visible_line = line.get(0..self.size.width).unwrap_or(line);
+                Self::render_line(current_line, visible_line)?;
             } else {
-                Self::draw_empty_row()?;
-            }
-            if current_row < height.saturating_sub(1) {
-                Terminal::print("\r\n")?;
+                Self::draw_empty_line(current_line)?;
             }
         }
+
+        self.need_redraw = false;
 
         Ok(())
     }
 
-    fn draw_empty_row() -> Result<()> {
-        Terminal::print('~')?;
+    pub fn resize(&mut self, to: Size) {
+        self.size = to;
+        self.need_redraw = true;
+    }
+
+    fn render_line<T: std::fmt::Display>(at: usize, content: T) -> Result<()> {
+        Terminal::move_caret_to(Position { col: 0, row: at })?;
+        Terminal::clear_line()?;
+        Terminal::print(content)?;
+
+        Ok(())
+    }
+
+    fn draw_empty_line(at: usize) -> Result<()> {
+        Self::render_line(at, '~')?;
 
         Ok(())
     }
@@ -81,27 +107,11 @@ impl View {
         Padding { left, right, row }
     }
 
-    fn render_welcome_screen() -> Result<()> {
-        let size = Terminal::size()?;
-        let padding = Self::cal_welcome_msg_padding(&size, WELCOME_MSG);
-        let row = format!(
+    fn build_welcome_msg(padding: &Padding) -> String {
+        format!(
             "{}{WELCOME_MSG}{}",
             " ".repeat(padding.left),
             " ".repeat(padding.right)
-        );
-
-        for current_row in 0..size.height {
-            Terminal::clear_line()?;
-            if current_row == padding.row {
-                Terminal::print(&row)?;
-            } else {
-                Self::draw_empty_row()?;
-            }
-            if current_row < size.height.saturating_sub(1) {
-                Terminal::print("\r\n")?;
-            }
-        }
-
-        Ok(())
+        )
     }
 }
