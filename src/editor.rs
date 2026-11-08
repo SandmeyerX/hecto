@@ -33,67 +33,74 @@ impl From<Location> for Position {
     }
 }
 
-#[derive(Default)]
 pub struct Editor {
     should_quit: bool,
     location: Location,
     view: View,
 }
 
-impl Editor {
-    pub fn run(&mut self) {
-        self.handle_args().expect("handle args err");
-        Terminal::init().expect("failed to init");
-        self.view
-            .resize(Terminal::size().expect("failed to get terminal size"));
-        let res = self.repl();
-        Terminal::terminate().expect("failed to terminate");
+impl Drop for Editor {
+    fn drop(&mut self) {
+        let _ = Terminal::terminate();
 
-        res.expect("repl error");
+        if self.should_quit {
+            let _ = Terminal::print("byebye~\n");
+        }
     }
+}
 
-    pub fn handle_args(&mut self) -> Result<()> {
+impl Editor {
+    pub fn build() -> Result<Self> {
+        Self::setup_panic_hook();
+        Terminal::init()?;
+
+        let mut view = View::default();
         let args = std::env::args().collect::<Vec<_>>();
         if let Some(path) = args.get(1) {
-            self.view.load(path)?;
+            view.load(path)?;
         }
 
-        Ok(())
+        Ok(Self {
+            should_quit: false,
+            location: Location::default(),
+            view,
+        })
     }
 
-    fn repl(&mut self) -> Result<()> {
+    pub fn run(&mut self) {
         loop {
-            let event = read()?;
-            self.eval_event(&event)?;
-            self.refresh_screen()?;
-
             if self.should_quit {
                 break;
             }
-        }
+            self.refresh_screen();
 
-        Ok(())
+            match read() {
+                Ok(event) => self.eval_event(&event),
+                Err(err) => {
+                    #[cfg(debug_assertions)]
+                    panic!("failed to read event: {err}");
+                }
+            }
+        }
     }
 
-    fn refresh_screen(&mut self) -> Result<()> {
-        Terminal::hide_caret()?;
-        Terminal::move_caret_to(Position::default())?;
-
-        if self.should_quit {
-            Terminal::clear_screen()?;
-            Terminal::print("byebye~\n")?;
-        } else {
-            self.view.render()?;
-            Terminal::move_caret_to(self.location.into())?;
-        }
-
-        Terminal::show_caret()?;
-        Terminal::execute()?;
-
-        Ok(())
+    fn setup_panic_hook() {
+        let current_hook = std::panic::take_hook();
+        std::panic::set_hook(Box::new(move |info| {
+            let _ = Terminal::terminate();
+            current_hook(info);
+        }));
     }
 
-    fn eval_event(&mut self, event: &Event) -> Result<()> {
+    fn refresh_screen(&mut self) {
+        let _ = Terminal::hide_caret();
+        self.view.render();
+        let _ = Terminal::move_caret_to(self.location.into());
+        let _ = Terminal::show_caret();
+        let _ = Terminal::execute();
+    }
+
+    fn eval_event(&mut self, event: &Event) {
         match event {
             Event::Key(key_event) if key_event.is_press() => match key_event.code {
                 KeyCode::Char(c) if c == 'q' && key_event.modifiers == KeyModifiers::CONTROL => {
@@ -106,7 +113,7 @@ impl Editor {
                 | KeyCode::Home
                 | KeyCode::End
                 | KeyCode::PageUp
-                | KeyCode::PageDown => self.move_point(key_event.code)?,
+                | KeyCode::PageDown => self.move_point(key_event.code),
                 _ => (),
             },
             Event::Resize(width, height) => {
@@ -114,12 +121,10 @@ impl Editor {
             }
             _ => (),
         }
-
-        Ok(())
     }
 
-    fn move_point(&mut self, code: KeyCode) -> Result<()> {
-        let size = Terminal::size()?;
+    fn move_point(&mut self, code: KeyCode) {
+        let size = Terminal::size().unwrap_or_default();
         let (max_x, max_y) = (size.width.saturating_sub(1), size.height.saturating_sub(1));
         let (x, y) = self.location.to_tuple();
         let loc = match code {
@@ -135,7 +140,5 @@ impl Editor {
         };
 
         self.location = loc;
-
-        Ok(())
     }
 }

@@ -9,5 +9,7 @@
 mod editor;
 
 fn main() {
-    editor::Editor::default().run();
+    editor::Editor::build()
+        .expect("failed to build editor")
+        .run();
 }

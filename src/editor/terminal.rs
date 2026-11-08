@@ -1,7 +1,10 @@
 use crate::editor::Result;
 use crossterm::cursor::{Hide, MoveTo, Show};
 use crossterm::style::Print;
-use crossterm::terminal::{Clear, ClearType, disable_raw_mode, enable_raw_mode, size};
+use crossterm::terminal::{
+    Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode,
+    enable_raw_mode, size,
+};
 use crossterm::{Command, queue};
 use std::io::{Write, stdout};
 
@@ -30,16 +33,19 @@ pub struct Terminal;
 
 impl Terminal {
     pub fn init() -> Result<()> {
-        enable_raw_mode()?;
+        Self::enter_alternate_screen()?;
         Self::clear_screen()?;
         Self::execute()?;
+        enable_raw_mode()?;
 
         Ok(())
     }
 
     pub fn terminate() -> Result<()> {
-        disable_raw_mode()?;
+        Self::leave_alternate_screen()?;
+        Self::show_caret()?;
         Self::execute()?;
+        disable_raw_mode()?;
 
         Ok(())
     }
@@ -82,6 +88,18 @@ impl Terminal {
         Ok(())
     }
 
+    pub fn enter_alternate_screen() -> Result<()> {
+        Self::queue(EnterAlternateScreen)?;
+
+        Ok(())
+    }
+
+    pub fn leave_alternate_screen() -> Result<()> {
+        Self::queue(LeaveAlternateScreen)?;
+
+        Ok(())
+    }
+
     pub fn execute() -> Result<()> {
         stdout().flush()?;
 
@@ -96,6 +114,14 @@ impl Terminal {
 
     pub fn print<T: std::fmt::Display>(content: T) -> Result<()> {
         Self::queue(Print(content))?;
+
+        Ok(())
+    }
+
+    pub fn print_row<T: std::fmt::Display>(at: usize, content: T) -> Result<()> {
+        Self::move_caret_to(Position { col: 0, row: at })?;
+        Self::clear_line()?;
+        Self::print(content)?;
 
         Ok(())
     }
