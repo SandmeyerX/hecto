@@ -14,7 +14,7 @@ pub struct Position {
     pub row: usize,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, PartialEq)]
 pub struct Size {
     pub width: usize,
     pub height: usize,

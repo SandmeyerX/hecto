@@ -2,10 +2,11 @@ use std::fs;
 use std::path::Path;
 
 use crate::editor::Result;
+use crate::editor::view::line::Line;
 
 #[derive(Default)]
 pub struct Buffer {
-    pub lines: Vec<String>,
+    pub lines: Vec<Line>,
 }
 
 impl Buffer {
@@ -22,7 +23,7 @@ impl Buffer {
         let content = fs::read_to_string(path)?;
         let mut lines = Vec::new();
         for line in content.lines() {
-            lines.push(line.to_string());
+            lines.push(line.into());
         }
 
         Ok(Self { lines })

@@ -1,41 +1,16 @@
-mod buffer;
+mod command;
 mod terminal;
 mod view;
 
-use crate::editor::terminal::{Position, Terminal};
+use crate::editor::command::EditorCommand;
+use crate::editor::terminal::Terminal;
 use crate::editor::view::View;
-use crossterm::event::{Event, KeyCode, KeyModifiers, read};
+use crossterm::event::{Event, read};
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
-#[derive(Debug, Default, Clone, Copy)]
-struct Location {
-    x: usize,
-    y: usize,
-}
-
-impl Location {
-    fn new(x: usize, y: usize) -> Self {
-        Self { x, y }
-    }
-
-    fn to_tuple(self) -> (usize, usize) {
-        (self.x, self.y)
-    }
-}
-
-impl From<Location> for Position {
-    fn from(value: Location) -> Self {
-        Self {
-            col: value.x,
-            row: value.y,
-        }
-    }
-}
-
 pub struct Editor {
     should_quit: bool,
-    location: Location,
     view: View,
 }
 
@@ -62,7 +37,6 @@ impl Editor {
 
         Ok(Self {
             should_quit: false,
-            location: Location::default(),
             view,
         })
     }
@@ -75,7 +49,7 @@ impl Editor {
             self.refresh_screen();
 
             match read() {
-                Ok(event) => self.eval_event(&event),
+                Ok(event) => self.eval_event(event),
                 Err(err) => {
                     #[cfg(debug_assertions)]
                     panic!("failed to read event: {err}");
@@ -95,50 +69,34 @@ impl Editor {
     fn refresh_screen(&mut self) {
         let _ = Terminal::hide_caret();
         self.view.render();
-        let _ = Terminal::move_caret_to(self.location.into());
+        let _ = Terminal::move_caret_to(self.view.get_position());
         let _ = Terminal::show_caret();
         let _ = Terminal::execute();
     }
 
-    fn eval_event(&mut self, event: &Event) {
-        match event {
-            Event::Key(key_event) if key_event.is_press() => match key_event.code {
-                KeyCode::Char(c) if c == 'q' && key_event.modifiers == KeyModifiers::CONTROL => {
-                    self.should_quit = true;
-                }
-                KeyCode::Left
-                | KeyCode::Right
-                | KeyCode::Up
-                | KeyCode::Down
-                | KeyCode::Home
-                | KeyCode::End
-                | KeyCode::PageUp
-                | KeyCode::PageDown => self.move_point(key_event.code),
-                _ => (),
-            },
-            Event::Resize(width, height) => {
-                self.view.resize((*width, *height).into());
-            }
-            _ => (),
-        }
-    }
-
-    fn move_point(&mut self, code: KeyCode) {
-        let size = Terminal::size().unwrap_or_default();
-        let (max_x, max_y) = (size.width.saturating_sub(1), size.height.saturating_sub(1));
-        let (x, y) = self.location.to_tuple();
-        let loc = match code {
-            KeyCode::Left => Location::new(x.saturating_sub(1), y),
-            KeyCode::Right if x < max_x => Location::new(x.saturating_add(1), y),
-            KeyCode::Up => Location::new(x, y.saturating_sub(1)),
-            KeyCode::Down if y < max_y => Location::new(x, y.saturating_add(1)),
-            KeyCode::Home => Location::new(0, y),
-            KeyCode::End => Location::new(max_x, y),
-            KeyCode::PageUp => Location::new(x, 0),
-            KeyCode::PageDown => Location::new(x, max_y),
-            _ => self.location,
+    fn eval_event(&mut self, event: Event) {
+        let should_process = match event {
+            Event::Key(key_event) if key_event.is_press() => true,
+            Event::Resize(_, _) => true,
+            _ => false,
         };
 
-        self.location = loc;
+        if !should_process {
+            return;
+        }
+
+        match EditorCommand::try_from(event) {
+            Ok(cmd) => {
+                if cmd == EditorCommand::Quit {
+                    self.should_quit = true;
+                    return;
+                }
+                self.view.handle_cmd(cmd);
+            }
+            Err(err) => {
+                #[cfg(debug_assertions)]
+                panic!("failed to transform event to `EditorCommand`: {err}");
+            }
+        }
     }
 }
